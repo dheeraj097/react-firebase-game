@@ -1,22 +1,103 @@
-import React from "react";
-import { Button, Typography } from "@mui/material";
-import ControlPointRoundedIcon from "@mui/icons-material/ControlPointRounded";
+import React, { useState } from "react";
+import { Box, Button, TextField, Typography } from "@mui/material";
+import makeRoomId from "../../libs/utils";
+import { roomStructure, StartGameProps } from "./types";
 
-const StartGame = ({
-  setGameStarted,
-}: {
-  setGameStarted: React.Dispatch<React.SetStateAction<boolean>>;
-}) => {
+const StartGame = (props: StartGameProps) => {
+  const { gameState, setGameState } = props;
+  const [gameData, setGameData] = useState({
+    playerName: "",
+    scoreToWin: "1",
+    playersCount: "2",
+    roomCode: "",
+  });
+
+  let name: string, value: string;
+  const handleGameDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    name = e.target.name;
+    value = e.target.value;
+    setGameData({ ...gameData, [name]: value });
+  };
+
+  const handleCreateRoom = async () => {
+    const payload: roomStructure = {
+      roomCode: makeRoomId(5),
+      playersCount: parseInt(gameData.playersCount),
+      activePlayer: 0,
+      playerNames: [gameData.playerName],
+      scores: new Array(parseInt(gameData.playersCount)).fill(0),
+      roundScore: 0,
+      scoreToWin: parseInt(gameData.scoreToWin),
+    };
+    const res = await fetch(`${process.env.REACT_APP_FIREBASE}games.json`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "Application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (res.ok) {
+      let resJson = await res.json();
+      setGameState({
+        ...gameState,
+        playing: true,
+        roomCode: payload.roomCode,
+        firebaseNodeName: resJson.name,
+      });
+    }
+  };
   return (
-    <>
-      <Typography variant="h6" style={{ textAlign: "center", color: "#000" }}>
-        Welcome
+    <Box mt={5} mb={5}>
+      <Typography variant="h4" style={{ textAlign: "center" }} mb={5}>
+        Welcome to the game
       </Typography>
-      <Button onClick={() => setGameStarted(true)}>
-        <ControlPointRoundedIcon />
-        <Typography variant="h5">Start Game</Typography>
-      </Button>
-    </>
+      <Box textAlign="center" mb={5}>
+        <TextField
+          name="playerName"
+          label="Your Name"
+          variant="outlined"
+          value={gameData.playerName}
+          onChange={handleGameDataChange}
+        />
+      </Box>
+      <Box display="flex" justifyContent="space-around">
+        <Box display="flex" flexDirection="column" textAlign="center">
+          <TextField
+            name="scoreToWin"
+            label="Score to win"
+            variant="outlined"
+            type="number"
+            value={gameData.scoreToWin}
+            onChange={handleGameDataChange}
+          />
+          <TextField
+            name="playersCount"
+            label="Players Count"
+            variant="outlined"
+            type="number"
+            value={gameData.playersCount}
+            onChange={handleGameDataChange}
+            sx={{ mt: 2 }}
+          />
+          <Button sx={{ mt: 2 }} onClick={handleCreateRoom} variant="contained">
+            <Typography variant="h5">Create Room</Typography>
+          </Button>
+        </Box>
+        <Box display="flex" flexDirection="column" textAlign="center">
+          <TextField
+            name="roomCode"
+            label="Room Code"
+            variant="outlined"
+            value={gameData.roomCode}
+            onChange={handleGameDataChange}
+          />
+          <Button sx={{ mt: 2 }} variant="contained">
+            <Typography variant="h5">Join Room</Typography>
+          </Button>
+        </Box>
+      </Box>
+    </Box>
   );
 };
 

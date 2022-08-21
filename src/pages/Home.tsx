@@ -4,14 +4,17 @@ import PlayGame from "./PlayGame/PlayGame";
 import StartGame from "./StartGame/StartGame";
 
 const Home = (): JSX.Element => {
-  const [gameStarted, setGameStarted] = useState(false);
-  // setGameStarted(false);
+  const [gameState, setGameState] = useState({
+    playing: false,
+    roomCode: "",
+    firebaseNodeName: "",
+  });
   return (
-    <Box border="2px solid red">
-      {gameStarted ? (
-        <PlayGame />
+    <Box mt={5} border="2px solid red">
+      {gameState.playing ? (
+        <PlayGame gameState={gameState} setGameState={setGameState} />
       ) : (
-        <StartGame setGameStarted={setGameStarted} />
+        <StartGame gameState={gameState} setGameState={setGameState} />
       )}
     </Box>
   );

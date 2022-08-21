@@ -2,7 +2,23 @@ import React from "react";
 import { Box, Button, Typography } from "@mui/material";
 import ControlPointRoundedIcon from "@mui/icons-material/ControlPointRounded";
 
-const PlayGame = () => {
+const PlayGame = ({
+  gameState,
+  setGameState,
+}: {
+  gameState: {
+    playing: boolean;
+    roomCode: string;
+    firebaseNodeName: string;
+  };
+  setGameState: React.Dispatch<
+    React.SetStateAction<{
+      playing: boolean;
+      roomCode: string;
+      firebaseNodeName: string;
+    }>
+  >;
+}) => {
   return (
     <>
       <Box
@@ -11,6 +27,10 @@ const PlayGame = () => {
           // marginTop: "50px",
         }}
       >
+        <Button>
+          <ControlPointRoundedIcon />
+          <Typography variant="h4">Room Code: {gameState.roomCode}</Typography>
+        </Button>
         <Button>
           <ControlPointRoundedIcon />
           <Typography variant="h5">New Game</Typography>
