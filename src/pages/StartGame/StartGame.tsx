@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Box, Button, TextField, Typography } from "@mui/material";
 import makeRoomId from "../../libs/utils";
 import { roomStructure, StartGameProps } from "./types";
+import { getDatabase, ref, set } from "firebase/database";
 
 const StartGame = (props: StartGameProps) => {
   const { gameState, setGameState } = props;
@@ -29,7 +30,7 @@ const StartGame = (props: StartGameProps) => {
       roundScore: 0,
       scoreToWin: parseInt(gameData.scoreToWin),
     };
-    const res = await fetch(`${process.env.REACT_APP_FIREBASE}games.json`, {
+    const res = await fetch(`${process.env.REACT_APP_databaseURL}games.json`, {
       method: "POST",
       headers: {
         "Content-Type": "Application/json",
@@ -46,6 +47,15 @@ const StartGame = (props: StartGameProps) => {
         firebaseNodeName: resJson.name,
       });
     }
+
+    const db = getDatabase();
+    set(ref(db, "games/" + payload.roomCode), payload)
+      .then((res) => {
+        console.log(res);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   };
   return (
     <Box mt={5} mb={5}>
