@@ -1,4 +1,5 @@
 import { initializeApp } from "firebase/app";
+import { getDatabase, ref } from "firebase/database";
 
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_apiKey,
@@ -12,3 +13,5 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+export const database = getDatabase(app);
+export const databaseRef = ref(database, "games");
