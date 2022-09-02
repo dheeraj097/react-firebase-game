@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { Box, Button, TextField, Typography } from "@mui/material";
 import makeRoomId from "../../libs/utils";
 import { roomStructure, StartGameProps } from "./types";
-import { databaseRef } from "../../libs/firebase";
-import { push } from "firebase/database";
+import { gamesCollection } from "../../libs/firebase";
+import { addDoc } from "firebase/firestore";
 
 const StartGame = (props: StartGameProps) => {
   const { gameState, setGameState } = props;
@@ -21,7 +21,7 @@ const StartGame = (props: StartGameProps) => {
     setGameData({ ...gameData, [name]: value });
   };
 
-  const handleCreateRoom = async () => {
+  const handleCreateRoom = () => {
     // create an array of size of players count
     const playersNames: string[] = new Array(
       parseInt(gameData.playersCount)
@@ -41,7 +41,7 @@ const StartGame = (props: StartGameProps) => {
       scoreToWin: parseInt(gameData.scoreToWin),
     };
 
-    const gameRef = push(databaseRef, payload);
+    const gameRef = addDoc(gamesCollection, payload);
     gameRef.then((res) => {
       setGameState({
         ...gameState,
@@ -53,9 +53,13 @@ const StartGame = (props: StartGameProps) => {
         scores: payload.scores,
         roundScore: payload.roundScore,
         scoreToWin: payload.scoreToWin,
-        firebaseNodeName: res.key || "",
+        firebaseNodeName: res.id || "",
       });
     });
+  };
+
+  const handleJoinRoom = () => {
+    
   };
   return (
     <Box mt={5} mb={5}>
@@ -102,7 +106,7 @@ const StartGame = (props: StartGameProps) => {
             value={gameData.roomCode}
             onChange={handleGameDataChange}
           />
-          <Button sx={{ mt: 2 }} variant="contained">
+          <Button sx={{ mt: 2 }} onClick={handleJoinRoom} variant="contained">
             <Typography variant="h5">Join Room</Typography>
           </Button>
         </Box>

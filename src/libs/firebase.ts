@@ -1,5 +1,8 @@
 import { initializeApp } from "firebase/app";
-import { getDatabase, ref } from "firebase/database";
+import { getFirestore, collection } from "firebase/firestore";
+import "firebase/firestore";
+import "firebase/auth";
+import "firebase/analytics";
 
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_apiKey,
@@ -13,5 +16,5 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-export const database = getDatabase(app);
-export const databaseRef = ref(database, "games");
+export const database = getFirestore(app);
+export const gamesCollection = collection(database, "games");
