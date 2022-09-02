@@ -5,7 +5,6 @@ import { roomStructure } from "../StartGame/types";
 import { gamesCollection } from "../../libs/firebase";
 import { query, where } from "firebase/firestore";
 import { useCollectionData } from "react-firebase-hooks/firestore";
-// import { doc, onSnapshot } from "firebase/firestore";
 
 const PlayGame = ({
   gameState,
@@ -14,30 +13,17 @@ const PlayGame = ({
   gameState: roomStructure;
   setGameState: React.Dispatch<React.SetStateAction<roomStructure>>;
 }) => {
-  // const unsub = onSnapshot(
-  //   doc(database, "games", gameState.firebaseNodeName || ""),
-  //   (doc) => {
-  //     console.log("Current data: ", doc.data(), doc.data()?.name);
-  //     console.log(gameState);
-  //   }
-  // );
-  // console.log(unsub);
-
   const docQuery = query(
     gamesCollection,
     where("roomCode", "==", gameState.roomCode)
   );
-
   const [fbData] = useCollectionData(docQuery) || [];
-
-  console.log(fbData && fbData[0]);
 
   return (
     <>
       <Box
         sx={{
           textAlign: "center",
-          // marginTop: "50px",
         }}
       >
         <Button>

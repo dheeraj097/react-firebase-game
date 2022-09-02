@@ -2,8 +2,15 @@ import React, { useState } from "react";
 import { Box, Button, TextField, Typography } from "@mui/material";
 import makeRoomId from "../../libs/utils";
 import { roomStructure, StartGameProps } from "./types";
-import { gamesCollection } from "../../libs/firebase";
-import { addDoc } from "firebase/firestore";
+import { gamesCollection, database } from "../../libs/firebase";
+import {
+  addDoc,
+  getDocs,
+  query,
+  runTransaction,
+  where,
+  doc,
+} from "firebase/firestore";
 
 const StartGame = (props: StartGameProps) => {
   const { gameState, setGameState } = props;
@@ -58,8 +65,41 @@ const StartGame = (props: StartGameProps) => {
     });
   };
 
-  const handleJoinRoom = () => {
-    
+  const handleJoinRoom = async () => {
+    // find the document in firebase collection using room code
+    console.log(gameData.roomCode);
+    const docQuery = query(
+      gamesCollection,
+      where("roomCode", "==", gameData.roomCode)
+    );
+    const querySnapshot = await getDocs(docQuery);
+    querySnapshot.forEach(async (roomDoc) => {
+      // Create a reference to the room doc.
+      const gameRoomDocRef = doc(database, "games", roomDoc.id);
+
+      const playerNames = roomDoc.data().playerNames;
+
+      // find first empty index & set players name in it
+      const search = (name: string) => name === "";
+      const firstEmptyIndex = playerNames.findIndex(search);
+      playerNames[firstEmptyIndex] = gameData.playerName;
+
+      await runTransaction(database, async (transaction) => {
+        transaction.update(gameRoomDocRef, { playerNames: playerNames });
+        setGameState({
+          ...gameState,
+          playing: true,
+          roomCode: roomDoc.data().roomCode,
+          playersCount: roomDoc.data().playersCount,
+          activePlayer: roomDoc.data().activePlayer,
+          playerNames: roomDoc.data().playerNames,
+          scores: roomDoc.data().scores,
+          roundScore: roomDoc.data().roundScore,
+          scoreToWin: roomDoc.data().scoreToWin,
+          firebaseNodeName: roomDoc.id,
+        });
+      });
+    });
   };
   return (
     <Box mt={5} mb={5}>
