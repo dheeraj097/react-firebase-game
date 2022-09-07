@@ -8,9 +8,11 @@ export interface roomStructure {
   roundScore: number;
   scoreToWin: number;
   firebaseNodeName?: string;
+  diceRoll: number;
 }
 
 export interface StartGameProps {
   gameState: roomStructure;
   setGameState: React.Dispatch<React.SetStateAction<roomStructure>>;
+  setPlayerId: React.Dispatch<React.SetStateAction<number>>;
 }

@@ -1,82 +1,212 @@
-import React from "react";
+import React, { useState } from "react";
 import { Box, Button, Typography } from "@mui/material";
 import ControlPointRoundedIcon from "@mui/icons-material/ControlPointRounded";
 import { roomStructure } from "../StartGame/types";
-import { gamesCollection } from "../../libs/firebase";
-import { query, where } from "firebase/firestore";
+import { database, gamesCollection } from "../../libs/firebase";
+import { doc, getDocs, query, runTransaction, where } from "firebase/firestore";
 import { useCollectionData } from "react-firebase-hooks/firestore";
+import CircleIcon from "@mui/icons-material/Circle";
+import WinnerCelebrations from "../../components/WinnerCelebrations";
 
 const PlayGame = ({
   gameState,
   setGameState,
+  playerId,
 }: {
   gameState: roomStructure;
   setGameState: React.Dispatch<React.SetStateAction<roomStructure>>;
+  playerId: number;
 }) => {
+  const [gameEnded, setGameEnded] = useState({
+    winnerName: "",
+    status: false,
+  });
+
   const docQuery = query(
     gamesCollection,
     where("roomCode", "==", gameState.roomCode)
   );
   const [fbData] = useCollectionData(docQuery) || [];
 
+  const handleRollDice = async () => {
+    const rolledDice = Math.floor(Math.random() * 6) + 1; // generate random number b/w 1 and 6
+
+    const querySnapshot = await getDocs(docQuery);
+    querySnapshot.forEach(async (roomDoc) => {
+      // Create a reference to the room doc.
+      const gameRoomDocRef = doc(database, "games", roomDoc.id);
+
+      // update round score
+      let roundScore = roomDoc.data().roundScore;
+      let activePlayer = roomDoc.data().activePlayer;
+
+      if (rolledDice === 1) {
+        activePlayer = (activePlayer + 1) % 2;
+        roundScore = 0;
+      } else {
+        roundScore = roundScore + rolledDice;
+      }
+
+      await runTransaction(database, async (transaction) => {
+        // Update room state in firebase
+        transaction.update(gameRoomDocRef, {
+          diceRoll: rolledDice,
+          roundScore: roundScore,
+          activePlayer: activePlayer,
+        });
+      });
+    });
+  };
+
+  const handleHoldDice = async () => {
+    const querySnapshot = await getDocs(docQuery);
+    querySnapshot.forEach(async (roomDoc) => {
+      // Create a reference to the room doc.
+      const gameRoomDocRef = doc(database, "games", roomDoc.id);
+
+      let roundScore = roomDoc.data().roundScore;
+      let activePlayer = roomDoc.data().activePlayer;
+      let scores = roomDoc.data().scores;
+      let playing = roomDoc.data().playing;
+      const scoreToWin = roomDoc.data().scoreToWin;
+
+      scores[playerId] = scores[playerId] + roundScore;
+
+      if (scores[playerId] >= scoreToWin) {
+        playing = false;
+        setGameEnded({ winnerName: activePlayer, status: true });
+      }
+      activePlayer = (activePlayer + 1) % 2;
+      roundScore = 0;
+
+      await runTransaction(database, async (transaction) => {
+        // Update room state in firebase
+        transaction.update(gameRoomDocRef, {
+          roundScore: roundScore,
+          activePlayer: activePlayer,
+          scores: scores,
+          playing: playing,
+        });
+      });
+    });
+  };
+
   return (
     <>
-      <Box
-        sx={{
-          textAlign: "center",
-        }}
-      >
-        <Button>
-          <ControlPointRoundedIcon />
-          <Typography variant="h4">Room Code: {gameState.roomCode}</Typography>
-        </Button>
-        <Button>
-          <ControlPointRoundedIcon />
-          <Typography variant="h5">New Game</Typography>
-        </Button>
-      </Box>
-      <Box display="flex" minHeight="60vh" margin="0 auto">
-        {fbData &&
-          fbData[0].playerNames.map((playerName: string, index: number) => {
-            return (
-              <Box flex={1} key={index}>
-                <Typography
-                  mt={10}
-                  variant="h3"
-                  style={{ textAlign: "center" }}
-                >
-                  {playerName ? playerName : "Waiting..."}
-                </Typography>
-                <Typography
-                  variant="h1"
-                  style={{ textAlign: "center", marginBottom: "100px" }}
-                >
-                  0
-                </Typography>
+      <Box style={{ background: "#f2ebeb" }}>
+        <Box
+          sx={{
+            textAlign: "center",
+          }}
+        >
+          <Typography variant="h4">
+            Room Code: {gameState.roomCode} | Score To Win:{" "}
+            {gameState.scoreToWin}
+          </Typography>
+          <Button>
+            <ControlPointRoundedIcon />
+            <Typography variant="h5">New Game</Typography>
+          </Button>
+        </Box>
+        <Box display="flex" margin="0 auto" minHeight="50vh">
+          {fbData &&
+            fbData[0].playerNames.map((playerName: string, index: number) => {
+              return (
                 <Box
-                  sx={{
-                    background: "red",
-                    color: "#fff",
-                    width: "20%",
-                    margin: "0 auto",
-                    padding: "12px",
-                    texAlign: "center",
+                  flex={1}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-evenly",
                   }}
+                  key={index}
                 >
-                  <Typography
-                    variant="h6"
-                    style={{ textAlign: "center", color: "#000" }}
+                  <Typography variant="h3" style={{ textAlign: "center" }}>
+                    {playerName ? (
+                      <>
+                        {playerName}
+                        {index === fbData[0].activePlayer && <CircleIcon />}
+                      </>
+                    ) : (
+                      "Waiting..."
+                    )}
+                  </Typography>
+                  <Typography variant="h1" style={{ textAlign: "center" }}>
+                    {fbData[0].activePlayer === index
+                      ? fbData[0].roundScore
+                      : 0}
+                  </Typography>
+                  <Box
+                    sx={{
+                      background: "red",
+                      color: "#fff",
+                      width: "20%",
+                      margin: "0 auto",
+                      padding: "12px",
+                      textAlign: "center",
+                    }}
                   >
-                    Current
-                  </Typography>
-                  <Typography variant="h4" style={{ textAlign: "center" }}>
-                    0
-                  </Typography>
+                    <Typography
+                      variant="h6"
+                      style={{ textAlign: "center", color: "#000" }}
+                    >
+                      Current
+                    </Typography>
+                    <Typography variant="h4" style={{ textAlign: "center" }}>
+                      {fbData[0].scores[index]}
+                    </Typography>
+                  </Box>
                 </Box>
-              </Box>
-            );
-          })}
+              );
+            })}
+          <Box
+            style={{
+              position: "absolute",
+              left: "46%",
+              top: "40%",
+              height: "30vh",
+            }}
+          >
+            <Box
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+              }}
+            >
+              {fbData && (
+                <>
+                  <img
+                    alt="dice"
+                    src={require("../../images/dice-" +
+                      fbData[0].diceRoll +
+                      ".png")}
+                    width="100px"
+                    height="100px"
+                  />
+                  <Button
+                    disabled={playerId !== fbData[0].activePlayer}
+                    variant="contained"
+                    color="primary"
+                    onClick={handleRollDice}
+                  >
+                    Roll
+                  </Button>
+                  <Button
+                    disabled={playerId !== fbData[0].activePlayer}
+                    variant="contained"
+                    color="secondary"
+                    onClick={handleHoldDice}
+                  >
+                    Hold
+                  </Button>
+                </>
+              )}
+            </Box>
+          </Box>
+        </Box>
       </Box>
+      {gameEnded.status && <WinnerCelebrations />}
     </>
   );
 };

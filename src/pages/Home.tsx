@@ -5,6 +5,7 @@ import StartGame from "./StartGame/StartGame";
 import { roomStructure } from "./StartGame/types";
 
 const Home = (): JSX.Element => {
+  const [playerId, setPlayerId] = useState(0);
   const [gameState, setGameState] = useState<roomStructure>({
     playing: false,
     roomCode: "",
@@ -15,13 +16,22 @@ const Home = (): JSX.Element => {
     roundScore: 0,
     scoreToWin: 0,
     firebaseNodeName: "",
+    diceRoll: 1,
   });
   return (
     <Box mt={5} border="2px solid red">
       {gameState.playing ? (
-        <PlayGame gameState={gameState} setGameState={setGameState} />
+        <PlayGame
+          gameState={gameState}
+          setGameState={setGameState}
+          playerId={playerId}
+        />
       ) : (
-        <StartGame gameState={gameState} setGameState={setGameState} />
+        <StartGame
+          gameState={gameState}
+          setGameState={setGameState}
+          setPlayerId={setPlayerId}
+        />
       )}
     </Box>
   );

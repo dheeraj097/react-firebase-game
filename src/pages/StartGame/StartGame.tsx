@@ -13,7 +13,7 @@ import {
 } from "firebase/firestore";
 
 const StartGame = (props: StartGameProps) => {
-  const { gameState, setGameState } = props;
+  const { gameState, setGameState, setPlayerId } = props;
   const [gameData, setGameData] = useState({
     playerName: "",
     scoreToWin: "1",
@@ -46,10 +46,13 @@ const StartGame = (props: StartGameProps) => {
       scores: new Array(parseInt(gameData.playersCount)).fill(0),
       roundScore: 0,
       scoreToWin: parseInt(gameData.scoreToWin),
+      diceRoll: 1,
     };
 
+    // save the game room in firebase
     const gameRef = addDoc(gamesCollection, payload);
     gameRef.then((res) => {
+      // update local state of game
       setGameState({
         ...gameState,
         playing: true,
@@ -62,6 +65,7 @@ const StartGame = (props: StartGameProps) => {
         scoreToWin: payload.scoreToWin,
         firebaseNodeName: res.id || "",
       });
+      setPlayerId(0);
     });
   };
 
@@ -77,6 +81,7 @@ const StartGame = (props: StartGameProps) => {
       // Create a reference to the room doc.
       const gameRoomDocRef = doc(database, "games", roomDoc.id);
 
+      // get player names from firebase
       const playerNames = roomDoc.data().playerNames;
 
       // find first empty index & set players name in it
@@ -85,7 +90,10 @@ const StartGame = (props: StartGameProps) => {
       playerNames[firstEmptyIndex] = gameData.playerName;
 
       await runTransaction(database, async (transaction) => {
+        // Update room state in firebase
         transaction.update(gameRoomDocRef, { playerNames: playerNames });
+
+        // Update local game state
         setGameState({
           ...gameState,
           playing: true,
@@ -98,6 +106,7 @@ const StartGame = (props: StartGameProps) => {
           scoreToWin: roomDoc.data().scoreToWin,
           firebaseNodeName: roomDoc.id,
         });
+        setPlayerId(1);
       });
     });
   };
