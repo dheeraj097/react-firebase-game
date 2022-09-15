@@ -28,7 +28,7 @@ const Navbar = () => {
           </Typography>
           <Stack direction="row" spacing={2}>
             <Button component={Link} to="/" color="inherit">
-              Home
+              Play
             </Button>
             <Button component={Link} to="/about" color="inherit">
               About
