@@ -11,8 +11,6 @@ import CasinoRoundedIcon from "@mui/icons-material/CasinoRounded";
 import { Link } from "react-router-dom";
 
 const Navbar = () => {
-  //const pages = ["Home", "About"];
-
   return (
     <AppBar position="static" sx={{ background: "#1983ed" }}>
       <Container>

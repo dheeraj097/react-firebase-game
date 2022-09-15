@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Box, Button, Typography } from "@mui/material";
 import ControlPointRoundedIcon from "@mui/icons-material/ControlPointRounded";
 import { roomStructure } from "../StartGame/types";
@@ -7,6 +7,7 @@ import { doc, getDocs, query, runTransaction, where } from "firebase/firestore";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import CircleIcon from "@mui/icons-material/Circle";
 import WinnerCelebrations from "../../components/WinnerCelebrations";
+import { playAudio } from "../../libs/utils";
 
 const PlayGame = ({
   gameState,
@@ -17,11 +18,6 @@ const PlayGame = ({
   setGameState: React.Dispatch<React.SetStateAction<roomStructure>>;
   playerId: number;
 }) => {
-  const [gameEnded, setGameEnded] = useState({
-    winnerName: "",
-    status: false,
-  });
-
   const docQuery = query(
     gamesCollection,
     where("roomCode", "==", gameState.roomCode)
@@ -29,6 +25,7 @@ const PlayGame = ({
   const [fbData] = useCollectionData(docQuery) || [];
 
   const handleRollDice = async () => {
+    playAudio();
     const rolledDice = Math.floor(Math.random() * 6) + 1; // generate random number b/w 1 and 6
 
     const querySnapshot = await getDocs(docQuery);
@@ -39,9 +36,11 @@ const PlayGame = ({
       // update round score
       let roundScore = roomDoc.data().roundScore;
       let activePlayer = roomDoc.data().activePlayer;
+      const playersCount = roomDoc.data().playersCount;
 
       if (rolledDice === 1) {
-        activePlayer = (activePlayer + 1) % 2;
+        // rotate through all players
+        activePlayer = (activePlayer + 1) % playersCount;
         roundScore = 0;
       } else {
         roundScore = roundScore + rolledDice;
@@ -64,19 +63,26 @@ const PlayGame = ({
       // Create a reference to the room doc.
       const gameRoomDocRef = doc(database, "games", roomDoc.id);
 
+      let winner = "";
       let roundScore = roomDoc.data().roundScore;
       let activePlayer = roomDoc.data().activePlayer;
       let scores = roomDoc.data().scores;
       let playing = roomDoc.data().playing;
+
+      const playersCount = roomDoc.data().playersCount;
       const scoreToWin = roomDoc.data().scoreToWin;
+      const playerNames = roomDoc.data().playerNames;
 
       scores[playerId] = scores[playerId] + roundScore;
 
       if (scores[playerId] >= scoreToWin) {
+        // someone won the game
         playing = false;
-        setGameEnded({ winnerName: activePlayer, status: true });
+        winner = playerNames[activePlayer];
+      } else {
+        // rotate through all players
+        activePlayer = (activePlayer + 1) % playersCount;
       }
-      activePlayer = (activePlayer + 1) % 2;
       roundScore = 0;
 
       await runTransaction(database, async (transaction) => {
@@ -86,6 +92,7 @@ const PlayGame = ({
           activePlayer: activePlayer,
           scores: scores,
           playing: playing,
+          winner: winner,
         });
       });
     });
@@ -125,13 +132,19 @@ const PlayGame = ({
                     {playerName ? (
                       <>
                         {playerName}
-                        {index === fbData[0].activePlayer && <CircleIcon />}
+                        {fbData[0].playing &&
+                          index === fbData[0].activePlayer && <CircleIcon />}
+                        {!fbData[0].playing && playerName === fbData[0].winner && (
+                          <span role="img" aria-label="winner">
+                            👑
+                          </span>
+                        )}
                       </>
                     ) : (
                       "Waiting..."
                     )}
                   </Typography>
-                  <Typography variant="h1" style={{ textAlign: "center" }}>
+                  <Typography variant="h2" style={{ textAlign: "center" }}>
                     {fbData[0].activePlayer === index
                       ? fbData[0].roundScore
                       : 0}
@@ -150,9 +163,9 @@ const PlayGame = ({
                       variant="h6"
                       style={{ textAlign: "center", color: "#000" }}
                     >
-                      Current
+                      Score
                     </Typography>
-                    <Typography variant="h4" style={{ textAlign: "center" }}>
+                    <Typography variant="h2" style={{ textAlign: "center" }}>
                       {fbData[0].scores[index]}
                     </Typography>
                   </Box>
@@ -189,6 +202,10 @@ const PlayGame = ({
                     variant="contained"
                     color="primary"
                     onClick={handleRollDice}
+                    sx={{
+                      marginTop: "15px",
+                      marginBottom: "15px",
+                    }}
                   >
                     Roll
                   </Button>
@@ -206,7 +223,7 @@ const PlayGame = ({
           </Box>
         </Box>
       </Box>
-      {gameEnded.status && <WinnerCelebrations />}
+      {fbData && fbData[0].winner !== "" && <WinnerCelebrations />}
     </>
   );
 };

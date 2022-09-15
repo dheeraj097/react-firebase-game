@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Box, Button, TextField, Typography } from "@mui/material";
-import makeRoomId from "../../libs/utils";
+import { makeRoomId } from "../../libs/utils";
 import { roomStructure, StartGameProps } from "./types";
 import { gamesCollection, database } from "../../libs/firebase";
 import {
@@ -37,6 +37,7 @@ const StartGame = (props: StartGameProps) => {
     // push the players name at first index
     playersNames[0] = gameData.playerName;
 
+    //create payload for room for firestore
     const payload: roomStructure = {
       playing: true,
       roomCode: makeRoomId(6),
@@ -47,6 +48,7 @@ const StartGame = (props: StartGameProps) => {
       roundScore: 0,
       scoreToWin: parseInt(gameData.scoreToWin),
       diceRoll: 1,
+      winner: "",
     };
 
     // save the game room in firebase
@@ -106,7 +108,7 @@ const StartGame = (props: StartGameProps) => {
           scoreToWin: roomDoc.data().scoreToWin,
           firebaseNodeName: roomDoc.id,
         });
-        setPlayerId(1);
+        setPlayerId(firstEmptyIndex);
       });
     });
   };

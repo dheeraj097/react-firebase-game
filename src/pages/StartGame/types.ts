@@ -9,6 +9,7 @@ export interface roomStructure {
   scoreToWin: number;
   firebaseNodeName?: string;
   diceRoll: number;
+  winner: string;
 }
 
 export interface StartGameProps {

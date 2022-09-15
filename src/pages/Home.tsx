@@ -17,6 +17,7 @@ const Home = (): JSX.Element => {
     scoreToWin: 0,
     firebaseNodeName: "",
     diceRoll: 1,
+    winner: "",
   });
   return (
     <Box mt={5} border="2px solid red">
