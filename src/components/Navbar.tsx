@@ -30,8 +30,8 @@ const Navbar = () => {
             <Button component={Link} to="/" color="inherit">
               Play
             </Button>
-            <Button component={Link} to="/about" color="inherit">
-              About
+            <Button component={Link} to="/rules" color="inherit">
+              Rules
             </Button>
           </Stack>
         </Toolbar>
