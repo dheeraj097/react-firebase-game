@@ -29,6 +29,12 @@ const StartGame = (props: StartGameProps) => {
   };
 
   const handleCreateRoom = () => {
+    // Basic validation
+    if (gameData.playerName === "") {
+      alert("Name is required");
+      return;
+    }
+
     // create an array of size of players count
     const playersNames: string[] = new Array(
       parseInt(gameData.playersCount)
@@ -40,7 +46,7 @@ const StartGame = (props: StartGameProps) => {
     //create payload for room for firestore
     const payload: roomStructure = {
       playing: true,
-      roomCode: makeRoomId(6),
+      roomCode: makeRoomId(7),
       playersCount: parseInt(gameData.playersCount),
       activePlayer: 0,
       playerNames: playersNames,
@@ -72,13 +78,25 @@ const StartGame = (props: StartGameProps) => {
   };
 
   const handleJoinRoom = async () => {
+    if (gameData.playerName === "" || gameData.roomCode === "") {
+      alert("Name & Room Code is required");
+      return;
+    }
+
+    // create query
     // find the document in firebase collection using room code
-    console.log(gameData.roomCode);
     const docQuery = query(
       gamesCollection,
       where("roomCode", "==", gameData.roomCode)
     );
     const querySnapshot = await getDocs(docQuery);
+
+    // Check if room code is valid
+    if (querySnapshot.empty) {
+      alert("No room found for this room code");
+      return;
+    }
+
     querySnapshot.forEach(async (roomDoc) => {
       // Create a reference to the room doc.
       const gameRoomDocRef = doc(database, "games", roomDoc.id);
@@ -89,6 +107,10 @@ const StartGame = (props: StartGameProps) => {
       // find first empty index & set players name in it
       const search = (name: string) => name === "";
       const firstEmptyIndex = playerNames.findIndex(search);
+      if (firstEmptyIndex === -1) {
+        alert("Room is full");
+        return;
+      }
       playerNames[firstEmptyIndex] = gameData.playerName;
 
       await runTransaction(database, async (transaction) => {
@@ -115,7 +137,7 @@ const StartGame = (props: StartGameProps) => {
   return (
     <Box mt={5} mb={5}>
       <Typography variant="h4" style={{ textAlign: "center" }} mb={5}>
-        Welcome to the game
+        Welcome
       </Typography>
       <Box textAlign="center" mb={5}>
         <TextField
