@@ -4,7 +4,7 @@ const About = () => {
   return (
     <>
       <h1>Game Rules</h1>
-      <h3>The game has 2 players, playing in rounds.</h3>
+      <h3>The game can have 2 to 4 players, playing in rounds.</h3>
       <h3>
         In each turn, a player rolls a dice as many times as he whishes. Each
         result get added to his ROUND score.
@@ -18,8 +18,8 @@ const About = () => {
         added to his GLOBAL score. After that, it's the next player's turn
       </h3>
       <h3>
-        {" "}
-        The first player to reach 100 points on GLOBAL score wins the game
+        The first player to reach <i>Score to win</i> points on GLOBAL score
+        wins the game
       </h3>
     </>
   );

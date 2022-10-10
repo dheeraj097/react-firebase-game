@@ -29,9 +29,17 @@ const StartGame = (props: StartGameProps) => {
   };
 
   const handleCreateRoom = () => {
-    // Basic validation
+    // Basic validations
     if (gameData.playerName === "") {
       alert("Name is required");
+      return;
+    }
+
+    if (
+      parseInt(gameData.playersCount) > 4 ||
+      parseInt(gameData.playersCount) < 2
+    ) {
+      alert("Please set player count between 2 & 4");
       return;
     }
 
@@ -166,6 +174,7 @@ const StartGame = (props: StartGameProps) => {
             value={gameData.playersCount}
             onChange={handleGameDataChange}
             sx={{ mt: 2 }}
+            inputProps={{ min: 2, max: 4 }}
           />
           <Button sx={{ mt: 2 }} onClick={handleCreateRoom} variant="contained">
             <Typography variant="h5">Create Room</Typography>

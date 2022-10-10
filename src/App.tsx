@@ -11,6 +11,7 @@ function App() {
       <Container>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/games/dice-game/build/" element={<Home />} />
           <Route path="/rules" element={<About />} />
         </Routes>
       </Container>

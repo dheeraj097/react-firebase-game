@@ -124,27 +124,31 @@ const PlayGame = ({
 
   return (
     <>
+      <Box
+        style={{
+          position: "absolute",
+          left: "30%",
+          textAlign: "center",
+        }}
+      >
+        <Typography variant="h4">
+          Room Code: {gameState.roomCode} | Score To Win: {gameState.scoreToWin}
+        </Typography>
+        <Button
+          onClick={handleNewGame}
+          disabled={fbData && fbData[0].winner === ""}
+        >
+          <ControlPointRoundedIcon />
+          <Typography variant="h5">New Game</Typography>
+        </Button>
+      </Box>
       <Box style={{ background: "#f2ebeb" }}>
         <Box
-          style={{
-            position: "absolute",
-            left: "30%",
-            textAlign: "center",
-          }}
+          display="grid"
+          gridTemplateColumns="auto auto"
+          margin="0 auto"
+          minHeight="50vh"
         >
-          <Typography variant="h4">
-            Room Code: {gameState.roomCode} | Score To Win:{" "}
-            {gameState.scoreToWin}
-          </Typography>
-          <Button
-            onClick={handleNewGame}
-            disabled={fbData && fbData[0].winner === ""}
-          >
-            <ControlPointRoundedIcon />
-            <Typography variant="h5">New Game</Typography>
-          </Button>
-        </Box>
-        <Box display="flex" margin="0 auto" minHeight="50vh">
           {fbData &&
             fbData[0].playerNames.map((playerName: string, index: number) => {
               return (
@@ -154,7 +158,7 @@ const PlayGame = ({
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "space-evenly",
-                    height: "60vh",
+                    height: fbData[0].playerNames.length > 2 ? "50vh" : "60vh",
                     background:
                       fbData[0].playing &&
                       index === fbData[0].activePlayer &&
@@ -208,54 +212,54 @@ const PlayGame = ({
                 </Box>
               );
             })}
+        </Box>
+        <Box
+          style={{
+            position: "absolute",
+            left: "46%",
+            top: fbData && fbData[0].playerNames.length > 2 ? "50%" : "40%",
+            height: "30vh",
+          }}
+        >
           <Box
             style={{
-              position: "absolute",
-              left: "46%",
-              top: "40%",
-              height: "30vh",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
             }}
           >
-            <Box
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-              }}
-            >
-              {fbData && (
-                <>
-                  <img
-                    alt="dice"
-                    src={require("../../images/dice-" +
-                      fbData[0].diceRoll +
-                      ".png")}
-                    width="100px"
-                    height="100px"
-                  />
-                  <Button
-                    disabled={playerId !== fbData[0].activePlayer}
-                    variant="contained"
-                    color="primary"
-                    onClick={handleRollDice}
-                    sx={{
-                      marginTop: "15px",
-                      marginBottom: "15px",
-                    }}
-                  >
-                    Roll
-                  </Button>
-                  <Button
-                    disabled={playerId !== fbData[0].activePlayer}
-                    variant="contained"
-                    color="secondary"
-                    onClick={handleHoldDice}
-                  >
-                    Hold
-                  </Button>
-                </>
-              )}
-            </Box>
+            {fbData && (
+              <>
+                <img
+                  alt="dice"
+                  src={require("../../images/dice-" +
+                    fbData[0].diceRoll +
+                    ".png")}
+                  width="100px"
+                  height="100px"
+                />
+                <Button
+                  disabled={playerId !== fbData[0].activePlayer}
+                  variant="contained"
+                  color="primary"
+                  onClick={handleRollDice}
+                  sx={{
+                    marginTop: "15px",
+                    marginBottom: "15px",
+                  }}
+                >
+                  Roll
+                </Button>
+                <Button
+                  disabled={playerId !== fbData[0].activePlayer}
+                  variant="contained"
+                  color="secondary"
+                  onClick={handleHoldDice}
+                >
+                  Hold
+                </Button>
+              </>
+            )}
           </Box>
         </Box>
       </Box>
